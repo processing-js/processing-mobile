@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Tangle Processing.js Sketch</title>
+
+    <!-- Processing.js -->
+    <script type="text/javascript" src="../../processing.js"></script>
+
+    <!-- Tangle -->
+    <script type="text/javascript" src="Tangle-0.1.0/Tangle.js"></script>
+
+    <!-- TangleKit (optional) -->
+    <link rel="stylesheet" href="Tangle-0.1.0/TangleKit/TangleKit.css" type="text/css">
+    <script type="text/javascript" src="Tangle-0.1.0/TangleKit/mootools.js"></script>
+    <script type="text/javascript" src="Tangle-0.1.0/TangleKit/sprintf.js"></script>
+    <script type="text/javascript" src="Tangle-0.1.0/TangleKit/BVTouchable.js"></script>
+    <script type="text/javascript" src="Tangle-0.1.0/TangleKit/TangleKit.js"></script>
+
+    <!-- Processing Sketch -->
+    <script type="text/processing" data-processing-target="sketch">
+      float d = 1.0;
+
+      void setup() {
+        size(640, 360);
+        noStroke();
+        fill(255);
+        rectMode(CENTER);
+      }
+
+      void draw() {
+        background(51);
+        translate(width/2, height/2);
+        d += 0.01;
+        rotate(d);
+        rect(0, 0, rSize, rSize); // rSize is global to the document
+      }
+    </script>
+
+    <!-- example -->
+    <script type="text/javascript">
+
+        var rSize; // shared variable with Processing sketch code (see rect() call above)
+
+        function setUpTangle () {
+
+            var element = document.getElementById("example");
+
+            var tangle = new Tangle(element, {
+                initialize: function () {
+                    this.rSize = 180;
+                    this.frameRate = 60;
+                },
+                update: function () {
+                    rSize = this.rSize;
+                    this.currentRSize = rSize;
+
+                    this.currentFrameRate = this.frameRate;
+                    Processing.getInstanceById('sketch').frameRate(this.frameRate);
+                }
+            });
+        }
+
+    </script>
+</head>
+
+<body onload="setUpTangle();">
+
+    <p>This is a simple reactive sketch using Tangle.js.  Drag the values below to alter the running sketch and sketch code.</p>
+
+    <canvas id="sketch"></canvas>
+
+    <div id="example">
+      <p>The rectangle above has a width and height of <span data-var="rSize" class="TKAdjustableNumber" data-min="10" data-max="250"> pixels</span>.
+         The sketch is running at <span data-var="frameRate" class="TKAdjustableNumber" data-min="1" data-max="60"> fps</span>.</p>
+
+    <pre>
+      float d = 1.0;
+
+      void setup() {
+        size(640, 360);
+        frameRate(<span data-var="currentFrameRate"></span>);
+        noStroke();
+        fill(255);
+        rectMode(CENTER);
+      }
+
+      void draw() {
+        background(51);
+        translate(width/2, height/2);
+        d += 0.01;
+        rotate(d);
+        rect(0, 0, <span data-var="currentRSize"><span>, <span data-var="currentRSize"></span>);
+      }
+    </pre>
+  </div>
+</body>
+</html>
