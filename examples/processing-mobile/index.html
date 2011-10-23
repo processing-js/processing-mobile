@@ -1,0 +1,40 @@
+<html>
+<head>
+  <title>Custom Device Motion Events in Processing.js</title>
+  <script src="../../processing.js"></script>
+
+  <!-- Custom JavaScript library extending Processing.js with Device Motion information. -->
+  <script src="../../processing-mobile.js"></script>
+</head>
+<body>
+  <h2>Device Motion Events in Processing.js for X and Y</h2>
+
+  <p>New built-in types are added to Processing: motionX, motionY, motionZ.  These are floats indicating the position of the device along the x, y, and z axis.  Each has a value bewtween -1 and 1.  Devices that do not support DeviceMotion events will have motionX == motionY == motionZ == 0 by default.</p>
+
+  <script type="text/processing" data-processing-target="sketch">
+    // New values, motion{X|Y|Z} come from processing-mobile.js
+    // and are floats (double) between -1 and 1, indicating position
+    // along the axis of the device.  If the device does not support
+    // DeviceMotion events, 0 is used for all three.
+
+    int x, y;
+
+    void setup() {
+      size(500, 500);
+    }
+
+    void draw() {
+      background(51);
+
+      // Remap axis value to something within the sketch bounds
+      x = map(motionX, -1.0, 1.0, 0, width);
+      y = map(motionY, -1.0, 1.0, 0, height);
+
+      ellipse(x, y, 10, 10);
+
+//      println(motionX + ', ' + motionY + ', ' + motionZ);
+    }
+  </script>
+  <canvas id="sketch"></canvas>
+</body>
+</html>
