@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>Processing.js LiveTwitter Demo</title>
+  <script src="../../processing.js" type="text/javascript"></script>
+  <script src="processing-twitter2.js" type="text/javascript"></script>
+</head>
+<body>
+  <script id="sketch" type="application/processing">
+    void setup() {
+      size(1024, 1024);
+      loadTweets('bacon');
+    }
+
+    void draw() {
+      background(255);
+      println(tweets.size());
+    }
+  </script>
+  <canvas id="tweets"></canvas>
+
+	<script type="text/javascript">
+//    var p = new Processing("tweets", document.getElementById("sketch").text);
+//		$('#twitterSearch').liveTwitter('chicago', {limit: 10, rate: 5000, rpp: 10, geocode: '41.7897563,-87.5997711,1km'});
+//	  liveTwitter('toronto', {limit: 50, rate: 5000, rpp: 50}, p);
+
+	</script>
+</body>
+</html>
