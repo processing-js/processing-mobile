@@ -65,7 +65,9 @@
     orientation: {
       alpha: 0,
       beta: 0,
-      gamma: 0
+      gamma: 0,
+      compassAccuracy: -1,
+      compassHeading: -1,
     }
   };
 
@@ -142,6 +144,8 @@
     mOrientation.alpha = evt.alpha;
     mOrientation.beta = evt.beta;
     mOrientation.gamma = evt.gamma;
+    mOrientation.compassAccuracy = evt.webkitCompassAccuracy ? evt.webkitCompassAccuracy : -1;
+    mOrientation.compassHeading = evt.webkitCompassHeading ? evt.webkitCompassHeading + window.orientation : -1;
   }
 
   window.addEventListener('deviceorientation',  orientationhandler, false);

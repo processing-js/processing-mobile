@@ -18,6 +18,8 @@
     // DeviceMotion events, 0 is used for all three.
 
     int x, y;
+    float lastTheta = 0;
+    float easing = 0.1;
 
     void setup() {
       size(500, 500);
@@ -35,6 +37,23 @@
       y = map(acceleration.y, -1.0, 1.0, 0, height);
 
       ellipse(x, y, 10, 10);
+
+      // Only show the compass if the device supports one
+      if (orientation.compassHeading >= 0 && orientation.compassAccuracy >= 0) {
+        // Ease the previous heading to the current heading
+        float theta = orientation.compassHeading;
+        float dtheta = theta - lastTheta;
+        if (abs(dtheta) < 180) {
+          lastTheta += dtheta * easing;
+        } else {
+          lastTheta = theta;
+        }
+
+        // Convert degree heading to an x/y co-ordinate;
+        int compassX = 100 * sin(radians(lastTheta));
+        int compassY = 100 * cos(radians(lastTheta));
+        ellipse(width/2 - compassX, height/2 - compassY, 20, 20);
+      }
 
 //      println(motionX + ', ' + motionY + ', ' + motionZ);
     }
