@@ -104,7 +104,15 @@
     attachLocationCallback(p5);
     return p5;
   };
-  // TODO: this will kill stuff like Processing.instances, need to fix
+  window.Processing.prototype = Pp;
+
+  // Copy static properties onto new Processing
+  for (var prop in P5) {
+    if (!P5.hasOwnProperty(prop)) {
+      continue;
+    }
+    window.Processing[prop] = P5[prop];
+  }
 
   // Extend any existing Processing instances with location callback, too.
   document.addEventListener('DOMContentLoaded', function() {
