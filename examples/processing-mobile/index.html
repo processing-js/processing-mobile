@@ -23,12 +23,16 @@
       size(500, 500);
     }
 
+    void locationChanged() {
+      println(coords.latitude);
+    }
+
     void draw() {
       background(51);
 
       // Remap axis value to something within the sketch bounds
-      x = map(motionX, -1.0, 1.0, 0, width);
-      y = map(motionY, -1.0, 1.0, 0, height);
+      x = map(acceleration.x, -1.0, 1.0, 0, width);
+      y = map(acceleration.y, -1.0, 1.0, 0, height);
 
       ellipse(x, y, 10, 10);
 
