@@ -7,14 +7,21 @@
 </head>
 <body>
   <script id="sketch" type="application/processing">
+    int lineHeight = 3;
+
     void setup() {
       size(1024, 1024);
+      strokeWeight(lineHeight);
       loadTweets('bacon');
     }
 
     void draw() {
-      background(255);
-      println(tweets.size());
+      background(121);
+      for (int i = 0; i < tweets.size(); i++) {
+        Tweet tweet = (tweet)tweets.get(i);
+        int w = map(tweet.text.length, 0, 140, 0, width);
+        line(0, i * lineHeight, w, i * lineHeight);
+      }
     }
   </script>
   <canvas id="tweets"></canvas>
