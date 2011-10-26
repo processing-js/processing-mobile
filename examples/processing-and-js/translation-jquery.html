@@ -1,0 +1,46 @@
+<!-- Make sure you include the HTML5 doc type (esp. for IE9) -->
+<!doctype html>
+<head>
+  <!-- Include Processing.js -->
+  <script src="../../processing.js"></script>
+
+  <!-- Include jQuery, using CDN link -->
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+
+  <!-- Some JavaScript that can interact with the sketch once running -->
+  <script>
+    function stopClicked() {
+      // Get the running sketch instance using the id of the canvas
+      var processingInstance = Processing.getInstanceById('sketch');
+      processingInstance.noLoop();
+
+      // Hide the canvas using jQuery
+      $('#sketch').slideUp('slow');
+    }
+
+    function startClicked() {
+      // Get the running sketch instance using the instances array,
+      // which only has 1 element in it, the single sketch.
+      var processingInstance = Processing.instances[0];
+      processingInstance.loop();
+
+      // Show the canvas using jQuery
+      $('#sketch').slideDown('slow');
+    }
+  </script>
+</head>
+<body>
+  <div>
+    <p>Some simple form interation from HTML that triggers things in the Processing sketch.</p>
+    <button onclick="startClicked();">Start Sketch</button>
+    <button onclick="stopClicked();">Stop Sketch</button>
+  </div>
+
+  <!--  Now a canvas to create our drawing area.  We use      -->
+  <!--  data-processing-sources to load our Processing code.  -->
+  <!--  We use a custom style to hide the div until start.    -->
+  <!--  NOTE: some browsers will not load this from file:///  -->
+  <!--  and will instead want you to use http:// (web server).-->
+  <canvas id="sketch" style="display: none;" data-processing-sources="translation.pde"></canvas>
+</body>
+</html>
