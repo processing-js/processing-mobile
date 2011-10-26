@@ -1,0 +1,75 @@
+<!-- Make sure you include the HTML5 doc type (esp. for IE9) -->
+<!doctype html>
+<head>
+  <!-- Include Processing.js. No 'type' attribute, the browser assumes text/javascript -->
+  <script src="../../processing.js"></script>
+</head>
+<body>
+
+  <!-- Inline JavaScript which uses Processing.js as a canvas drawing API.   -->
+  <!-- Note that we have to create and start our sketch manually.            -->
+  <script type="text/javascript">
+    // Original Translation sketch from processing.org
+
+    function addSketch() {
+
+      // Processing.js will use this function as the body of the sketch,
+      // and pass us a processing instance, which we can use to attach
+      // things like setup() and draw(), and to access all the various
+      // Processing types, functions and values.
+      var sketchBody = function(processing) {
+        var x = 0,
+            y = 0,
+            dim = 80;
+
+        processing.setup = function() {
+          processing.size(640, 360);
+          processing.noStroke();
+        }
+
+        processing.draw = function() {
+          processing.background(102);
+
+          x = x + 0.8;
+
+          if (x > processing.width + dim) {
+            x = -dim;
+          }
+
+          processing.translate(x, processing.height/2-dim/2);
+          processing.fill(255);
+          processing.rect(-dim/2, -dim/2, dim, dim);
+
+          // Transforms accumulate. Notice how this rect moves
+          // twice as fast as the other, but it has the same
+          // parameter for the x-axis value
+          processing.translate(x, dim);
+          processing.fill(0);
+          processing.rect(-dim/2, -dim/2, dim, dim);
+        }
+      };
+
+      // Wrap our code in a Processing.Sketch object to setup the
+      // rest of the bits we'll need later.  It takes a function that
+      // accepts one argument, a processing instance.
+      var sketch = new Processing.Sketch(sketchBody);
+
+      // Dynamically create a canvas and insert into the DOM
+      var canvas = document.createElement('canvas');
+      var sketchesDiv = document.getElementById('sketches');
+      sketchesDiv.appendChild(canvas);
+
+      // Pass in the 'id' of the canvas (or the canvas element itself)
+      // and a Processing.Sketch object.
+      var processingInstance = new Processing(canvas, sketch);
+
+    }
+  </script>
+
+  <!-- We rely on user intervention to start our sketch(es) -->
+  <button onclick="addSketch();">Add New Sketch</button>
+
+  <!-- Append new sketches to this DOM node -->
+  <div id="sketches"></div>
+</body>
+</html>
