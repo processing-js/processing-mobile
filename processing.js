@@ -19746,10 +19746,18 @@
         loadSketchFromSources(canvas[i], filenames);
       }
     }
-
+//dh: custom patch for this processing.js, see https://processing-js.lighthouseapp.com/projects/41284-processingjs/tickets/1740-processinginit-uses-a-nodelist-as-if-its-an-array-which-can-cause-race-conditions#ticket-1740-2
     // also process all <script>-indicated sketches, if there are any
-    var scripts = document.getElementsByTagName('script');
-    var s, source, instance;
+    var s, last, source, instance,
+      nodelist = document.getElementsByTagName('script'),
+      scripts = [];
+
+    // snapshoot the DOM, as the nodelist is only a DOM view, and
+    // always up to date
+    for (var s=nodelist.length-1; s>=0; s--) {
+      scripts.push(nodelist[s]);
+    }
+
     for (s = 0; s < scripts.length; s++) {
       var script = scripts[s];
       if (!script.getAttribute) {
