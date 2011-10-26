@@ -1,0 +1,37 @@
+<!-- Make sure you include the HTML5 doc type (esp. for IE9) -->
+<!doctype html>
+<head>
+  <!-- Include Processing.js -->
+  <script src="../../processing.js"></script>
+
+  <!-- Some JavaScript that can interact with the sketch once running -->
+  <script>
+    function stopClicked() {
+      // Get the running sketch instance using the id of the canvas
+      var processingInstance = Processing.getInstanceById('sketch');
+      processingInstance.noLoop();
+    }
+
+    function startClicked() {
+      // Get the running sketch instance using the instances array,
+      // which only has 1 element in it, the single sketch.
+      var processingInstance = Processing.instances[0];
+      processingInstance.loop();
+    }
+  </script>
+</head>
+<body>
+
+  <!--  Now a canvas to create our drawing area.  We use      -->
+  <!--  data-processing-sources to load our Processing code.  -->
+  <!--  NOTE: some browsers will not load this from file:///  -->
+  <!--  and will instead want you to use http:// (web server).-->
+  <canvas id="sketch" data-processing-sources="translation.pde"></canvas>
+
+  <div>
+    <p>Some simple form interation from HTML that triggers things in the Processing sketch.</p>
+    <button onclick="stopClicked();">Stop Sketch</button>
+    <button onclick="startClicked();">Start Sketch</button>
+  </div>
+</body>
+</html>

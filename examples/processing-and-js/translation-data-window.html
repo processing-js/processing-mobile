@@ -1,0 +1,67 @@
+<!-- Make sure you include the HTML5 doc type (esp. for IE9) -->
+<!doctype html>
+<head>
+  <!-- Include Processing.js. No 'type' attribute, the browser assumes text/javascript -->
+  <script src="../../processing.js"></script>
+</head>
+<body>
+
+  <script type="text/javascript">
+    // Three global variables, shared across all scripts (including Processing)
+    var x = 0, y = 0;
+    var dim = 80;
+
+    // Run this function every 50ms to print global values, showing
+    // how they get changed in the Processing sketch below (see draw).
+    setInterval(function() {
+      var output = document.getElementById('output');
+      output.innerHTML = "x=" + x + "<br>y=" + y + "<br>dim=" + dim;
+    }, 50);
+  </script>
+
+  <!-- Inline Processing script. "Is that Java code in a script tag!?"       -->
+  <!-- Yes, yes it is! The 'type' of text/processing (application/processing -->
+  <!-- also works) means it gets ignored by the browser, and found by        -->
+  <!-- Processing.js.  The 'data-processing-target' attribute gives the id   -->
+  <!-- of the canvas to use for this code.                                   -->
+  <script type="text/processing" data-processing-target="sketch">
+    // Original Translation sketch from processing.org
+
+    void setup() {
+      size(640, 360);
+      noStroke();
+    }
+
+    void draw() {
+      background(102);
+
+      // x, y, and dim come from the global scope
+      x = x + 0.8;
+
+      if (x > width + dim) {
+        x = -dim;
+      }
+
+      translate(x, height/2-dim/2);
+      fill(255);
+      rect(-dim/2, -dim/2, dim, dim);
+
+      // Transforms accumulate. Notice how this rect moves
+      // twice as fast as the other, but it has the same
+      // parameter for the x-axis value
+      translate(x, dim);
+      fill(0);
+      rect(-dim/2, -dim/2, dim, dim);
+    }
+  </script>
+
+  <!--  Now a canvas to create our drawing area.  We rely     -->
+  <!--  on the 'id' attribute of our canvas to bind the       -->
+  <!--  script to the canavs at run-time.  This way you can   -->
+  <!--  have multiple sketches per page.                      -->
+  <canvas id="sketch"></canvas>
+
+  <!--  Display info about globals here (see interval above)  -->
+  <div id="output"></div>
+</body>
+</html>
