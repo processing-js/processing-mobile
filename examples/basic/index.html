@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Basic Examples</title>
+    <link rel="stylesheet" type="text/css" href="http://twitter.github.com/bootstrap/1.3.0/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="google-code-prettify/prettify.css">
+    <style type="text/css">
+      canvas { border: 1px solid #888888; }
+    </style>
+
+    <script type="text/javascript" src="jquery-1.6.4.js"></script>
+    <script type="text/javascript" src="google-code-prettify/prettify.js"></script>
+    <script type="text/javascript" src="../../processing.js"></script>
+    <script type="text/javascript">
+      var code, canvas, p;
+
+      window.addEventListener("DOMContentLoaded", function() {
+        code = document.getElementById("code");
+        canvas = document.getElementById("canvas");
+      });
+
+      function regenerateCanvas() {
+        var parent = canvas.parentNode;
+        parent.removeChild(canvas);
+        canvas = document.createElement("canvas");
+        canvas.id = "canvas";
+        parent.appendChild(canvas);
+      }
+
+      function changeSketch(name) {
+        if (p) {
+          p.exit();
+          delete p;
+        }
+
+        if (name === "---") {
+          code.innerHTML = "What are you doing, you're not supposed to select this!";
+          regenerateCanvas();
+          return;
+        }
+
+        $.ajax({
+          url: name,
+          cache: false,
+          success: function(data) {
+            code.innerHTML = data;
+            prettyPrint();
+            regenerateCanvas();
+            p = new Processing(canvas, data);
+          }
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <h3 style="display: inline; margin-right: 0.25em;">Select a Sketch:</h3>
+      <select onChange="javascript:changeSketch(this.value);">
+        <option>---</option>
+        <optgroup label="The Processing Language">
+          <option value="helloworld.pde">1. Hello world</option>
+          <option value="coordinatesystem.pde">2. Co-ordinate system</option>
+          <option value="setupanddraw.pde">3. setup() and draw()</option>
+          <option value="loop.pde">4. Controlling the draw loop</option>
+          <option value="redraw.pde">5. Calling the draw loop manually</option>
+          <option value="variables.pde">6. Variables</option>
+          <option value="functions.pde">7. Functions</option>
+          <option value="objects.pde">8. Objects</option>
+        </optgroup>
+        <optgroup label="2D Shapes">
+          <option value="pointsandlines.pde">1. Points and lines</option>
+          <option value="shapeprimitives.pde">2. Shape primitives</option>
+          <option value="piechart.pde">3. Slice of arc() pie</option>
+        </optgroup>
+        <optgroup label="Colour and Images">
+          <option value="loadimage.pde">1. Load image</option>
+          <option value="createimage.pde">2. Create image</option>
+          <option value="color.pde">3. color()</option>
+          <option value="fillstrokeweight.pde">4. Fill, stroke, and weight</option>
+          <option value="coollines.pde">5. Cool lines</option>
+          <option value="colorwheel.pde">6. Colour wheel</option>
+          <option value="pointilism.pde">7. Pointilism</option>
+          <option value="pgraphics.pde">8. Off-screen drawing</option>
+        </optgroup>
+        <optgroup label="Text">
+          <option value="text.pde">1. Text</option>
+        </optgroup>
+        <optgroup label="Input">
+          <option value="mousesignals.pde">1. Mouse input</option>
+          <option value="keyboard.pde">2. Keyboard input</option>
+          <option value="easing.pde">3. Easing</option>
+        </optgroup>
+        <optgroup label="Math">
+          <option value="translate.pde">1. Translate</option>
+          <option value="scale.pde">2. Scale</option>
+          <option value="rotate.pde">3. Rotate</option>
+          <option value="arm.pde">4. Arm</option>
+        </optgroup>
+        <optgroup label="Java">
+          <option value="arraylist.pde">1. Array List</option>
+          <option value="hashmap.pde">2. Hash Map</option>
+        </optgroup>
+        <option value=""></option>
+      </select>
+      <div class="row">
+        <div class="span8">
+          <h3>Code</h3>
+          <pre id="code" class="prettyprint">Select a sketch from the dropdown above to get started</pre>
+        </div>
+        <div class="span8">
+          <h3>Sketch</h3>
+          <canvas id="canvas">Your browser does not support the HTML5 Canvas tag :(</canvas>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
