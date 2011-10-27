@@ -8,25 +8,46 @@
  * Modified by David Humphrey (@humphd) for use with Processing.js
  */
 
-/*
- * Usage example:
- * liveTwitter('bacon', {limit: 10, rate: 15000}, processingInstance);
- */
+(function (document, Processing) {
 
-
-(function ($) {
-
-  // Extend jQuery with a reverse function if it isn't already defined
-  if (!$.fn.reverse) {
-    $.fn.reverse = function () {
-      return this.pushStack(this.get().reverse(), arguments);
+  function getScript(success) {
+    var script = document.createElement('script');
+    script.src = "http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js";
+    var head=document.getElementsByTagName('head')[0],
+        done=false;
+    script.onload = script.onreadystatechange = function(){
+      if ( !done && (!this.readyState
+           || this.readyState == 'loaded'
+           || this.readyState == 'complete') ) {
+        done=true;
+        success(jQuery);
+        script.onload = script.onreadystatechange = null;
+      }
     };
+    head.appendChild(script);
   }
 
-  this.liveTwitter = function(query, options, processing, callback) {
+  // Expose two new globals to Processing sketches:
+  //   1) loadTweets() a function to start a live-feed query
+  //   2) tweets an ArrayList of tweets that have been loaded
+  var Pp = Processing.prototype;
 
-    // Put the tweets on the global so Processing can get them too.
-    window.tweets = [];
+  Pp.tweets = new Pp.ArrayList();
+
+  Pp.loadTweets = function(query, geocode) {
+    var options = {geocode: geocode};
+    getScript(function(jQuery) {
+      loadTweets$(jQuery, query, options);
+    });
+  };
+
+  function loadTweets$(jQuery, query, options, callback) {
+    // Extend jQuery with a reverse function if it isn't already defined
+    if (!$.fn.reverse) {
+      $.fn.reverse = function () {
+        return this.pushStack(this.get().reverse(), arguments);
+      };
+    }
 
     $(this).each(function () {
       var settings = {};
@@ -50,8 +71,8 @@
         // These are the default settings.
         settings = $.extend({
           mode:      'search', // Mode, valid options are: 'search', 'user_timeline', 'list', 'home_timeline'
-          rate:      15000,    // Refresh rate in ms
-          limit:     10,       // Limit number of results
+          rate:      3000,    // Refresh rate in ms
+          limit:     100,       // Limit number of results
           imageSize: 24,       // Size of image in pixels
           refresh:   true,
           timeLinks: true,
@@ -271,13 +292,13 @@
 
           // Create an object useable by Processing
           toP5: function (tweet) {
-            return new processing.Tweet(
-              tweet.id,
-              tweet.screen_name,
-              tweet.profile_image_url, // will get async loaded
-              tweet.text,
-              this.relativeTime(tweet.created_at)
-            );
+            return {
+              id: tweet.id,
+              profileName: tweet.screen_name,
+              profileImageUrl: tweet.profile_image_url,
+              text: tweet.text,
+              date: this.relativeTime(tweet.created_at)
+            };
           },
 
           // Handle reloading
@@ -286,8 +307,6 @@
             if (twitter.settings.refresh || initialize) {
 
               $.getJSON(twitter.apiURL(), function (json) {
-                var newTweets = 0;
-
                 // The search and regular APIs differ somewhat
                 var results = (twitter.settings.mode === 'search') ? json.results : json;
 
@@ -298,25 +317,13 @@
                   if (!twitter.settings.filter || twitter.settings.filter(this)) {
                     // Check if this is actually a new tweet
                     if (Date.parse(tweet.created_at) > twitter.lastTimeStamp) {
-                      processing.addTweet(twitter.toP5(tweet));
+                      Pp.tweets.add(twitter.toP5(tweet));
 
                       // Remember the last timestamp for the next refresh.
                       twitter.lastTimeStamp = Date.parse(tweet.created_at);
-
-                      newTweets++;
                     }
                   }
                 });
-
-                // Did we get any new tweets?
-                if (newTweets > 0) {
-                  // Remove old entries exceeding the limit
-                  var extra = newTweets - twitter.settings.limit;
-                  if (extra > 0) {
-                    processing.removeTweets(newTweets - twitter.settings.limit);
-                    newTweets -= extra;
-                  }
-                }
               });
             }
           },
@@ -342,7 +349,6 @@
 
           // Clear all tweets
           clear: function () {
-            processing.clearTweets();
             this.lastTimeStamp = null;
           }
         };
@@ -359,4 +365,4 @@
     });
     return this;
   };
-})(jQuery);
+})(window.document, Processing);
