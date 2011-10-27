@@ -11,6 +11,8 @@
  *             alpha: the direction the device is facing according to the compass
  *             beta: the angle in degrees the device is tilted front-to-back
  *             gamma the angle in degrees the device is tilted left-to-right.
+ *             compassAccuracy the iOS 5 compass accuracy (or -1)
+ *             compassHeading the iOS 5 cCompass heading in degrees or -1
  *
  *  acceleration: (object) acceleration data for device along x, y, and z axes:
  *             x: (float) device acceleration in m/s^2 along the X axis (-1.0 to 1.0)
@@ -67,7 +69,7 @@
       beta: 0,
       gamma: 0,
       compassAccuracy: -1,
-      compassHeading: -1,
+      compassHeading: -1
     }
   };
 
