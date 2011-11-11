@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Processing.js Example Page</title>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="../../processing.js"></script>
+    <script>
+      function handleFile(e) {
+        var reader = new FileReader;
+
+        e.stopPropagation();
+        e.preventDefault();
+
+        reader.onload = function(event) {
+          var img = new Image;
+          img.src = event.target.result;
+          img.onload = function() {
+            var p = Processing.instances[0];
+            p.drawImage(img);
+          }
+        }
+
+        // target for input, dataTrasfer for drop
+        var file = e.target.files ? e.target.files[0] : e.dataTransfer.files[0];
+
+        reader.readAsDataURL(file);
+      }
+      
+      function clearScreen() {
+        var p = Processing.instances[0];
+        p.clearScreen();
+      }
+
+      function handleDragOver(evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
+      }
+
+      document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById('file').addEventListener('change', handleFile);
+
+        var dropZone = document.getElementById('test');
+        dropZone.addEventListener('dragover', handleDragOver, false);
+        dropZone.addEventListener('drop', handleFile, false);
+      }, false);
+    </script>
+  </head>
+  <body>
+    <canvas id="test" data-processing-sources="test.pde" style="border: 1px solid black;"></canvas>
+    <br />
+    <input type="file" id="file" name="file" />
+    <input type="button" onClick="javascript:clearScreen()" value="Clear sketch" />
+  </body>
+</html>
