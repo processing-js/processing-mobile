@@ -1,6 +1,9 @@
 
 (function(window, document, Math, undef) {
 
+  // Check for PhoneGap
+  var startupEvent = (window.device && window.device.phonegap) ? 'deviceready' : 'DOMContentLoaded';
+
   var nop = function(){};
 
   var debug = (function() {
@@ -19719,7 +19722,7 @@
    * Automatic initialization function.
    */
   var init = function() {
-    document.removeEventListener('DOMContentLoaded', init, false);
+    document.removeEventListener(startupEvent, init, false);
 
     var canvas = document.getElementsByTagName('canvas'),
       filenames;
@@ -19803,7 +19806,7 @@
    */
   Processing.disableInit = function() {
     if(isDOMPresent) {
-      document.removeEventListener('DOMContentLoaded', init, false);
+      document.removeEventListener(startupEvent, init, false);
     }
   };
 //#endif
@@ -19811,7 +19814,7 @@
   if(isDOMPresent) {
     window['Processing'] = Processing;
 //#if PARSER
-    document.addEventListener('DOMContentLoaded', init, false);
+    document.addEventListener(startupEvent, init, false);
 //#endif
   } else {
     // DOM is not found
