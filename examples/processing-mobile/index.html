@@ -12,11 +12,6 @@
   <p>New built-in types are added to Processing: motionX, motionY, motionZ.  These are floats indicating the position of the device along the x, y, and z axis.  Each has a value bewtween -1 and 1.  Devices that do not support DeviceMotion events will have motionX == motionY == motionZ == 0 by default.</p>
 
   <script type="text/processing" data-processing-target="sketch">
-    // New values, motion{X|Y|Z} come from processing-mobile.js
-    // and are floats (double) between -1 and 1, indicating position
-    // along the axis of the device.  If the device does not support
-    // DeviceMotion events, 0 is used for all three.
-
     int x, y;
     float lastTheta = 0;
     float easing = 0.1;
@@ -26,7 +21,7 @@
     }
 
     void locationChanged() {
-      println(coords.latitude);
+      println(coords.longitude + ", " + coords.latitude);
     }
 
     void draw() {
@@ -54,8 +49,6 @@
         int compassY = 100 * cos(radians(lastTheta));
         ellipse(width/2 - compassX, height/2 - compassY, 20, 20);
       }
-
-//      println(motionX + ', ' + motionY + ', ' + motionZ);
     }
   </script>
   <canvas id="sketch"></canvas>
