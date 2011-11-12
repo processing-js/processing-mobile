@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Pew Pew!</title>
+    <meta charset="UTF-8">
+    
+    <link href="css/reset.css" rel="stylesheet" type="text/css">
+	  <link href="css/main.css" rel="stylesheet" type="text/css">
+  	<link href="css/ui.css" rel="stylesheet" type="text/css">
+	  <link href="css/console.css" rel="stylesheet" type="text/css">
+	  <link href="css/pewpew.css" rel="stylesheet" type="text/css">
+    
+    <script type="text/javascript" src="input.js"></script>
+    <script type="text/javascript" src="jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="jquery-ui-1.8.9.custom.min.js"></script>
+    <script type="text/javascript" src="jquery.hotkeys-0.7.9.js"></script>
+    <script type="text/javascript" src="pewpew.js"></script>
+    <script type="text/javascript" src="processing.js"></script>
+  </head>
+  <body>
+    <div id="wrapper">
+      <div id="main">
+        <div id="content" align="center" style="width: 858px;">
+          <section id="pewpew">
+            <table width="640" cellpadding="4" cellspacing="2">
+              <tr>
+                <td colspan="3" align="center">
+                  <h1>Pew Pew!!</h1>
+                </td>
+    
+              </tr>
+              <tr>
+                <td align="center">
+                  <p class="levels">
+                    Shield 	<div id="shieldlevel" class="lbar"></div>
+                  </p>
+                </td>
+                <td align="center" valign="middle">
+    
+                  <p class="levels">
+                    Lives <span id="livesbox"></span>&nbsp;&nbsp;
+                    Level <span id="levelbox"></span><br>
+                    Score <span id="scorebox"></span>
+                  </p>
+                </td>
+                <td align="center">
+    
+                  <p class="levels">
+                    Beam <div id="beamlevel" class="lbar"></div>
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="3">
+                  <div class="spacer"></div>
+    
+                  <canvas id="scene" datasrc="pewpew.pjs" draggable="false">
+                    <a href="http://en.wikipedia.org/wiki/Canvas_element">Your 
+                      Browser doesn't support Canvas</a>
+                  </canvas>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="3" align="center">
+                  Controls : 
+                    N = New Game / P = Pause / R = Retro Mode<br>
+    
+                    W = Thrust / Mouse1 = PEW! / Mouse2 = Beam / 
+                    Mouse 3 or S = Shield<br><br>	
+                </td>
+              </tr>
+            </table>
+          </section>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
