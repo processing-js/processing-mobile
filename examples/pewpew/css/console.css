@@ -1,0 +1,44 @@
+div.console {
+	display: none;
+	width: 99.8%;
+	height: 300px;
+	font-family: fixed;
+	font-size: 8pt;
+	background-color: #000000;
+	border-bottom: solid 1px #595959;
+	padding-bottom: 5px;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	opacity: 0.90;
+	z-index: 3;
+}
+#console div.consolehistory {
+	height: 285px;
+	overflow: hidden;
+	width: 99.9%;
+	color: #cccccc;
+	opacity: 0.90;
+	margin-left: 4px;
+}
+#console div.consoleinput {
+	width: 100%;
+	color: #e9a800;
+	opacity: 0.90;
+	padding-left: 2px;
+}
+#console input.consolecommandline {
+	width: 700px;
+	border: 0px;
+	color: #cccccc;
+	background-color: #000000;
+	opacity: 0.95;
+
+}
+#console span.highlight {color: #E9A800;}
+#console span.success {color: #6FFF31;}
+#console span.notice {color:#1E90FF;}
+#console span.warning {color:#FFFF00;}
+#console span.fatal {color:#FF0000;}
+#console span.error {color: #B24D4D;}
+

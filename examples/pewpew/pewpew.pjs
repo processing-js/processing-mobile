@@ -1,0 +1,1062 @@
+/******************************************************************************
+ *                                                                            *
+ *                      *****************************                         *
+ *                         PEW PEW Processing File                            *
+ *                      *****************************                         *
+ *                                                                            *
+ * Licenced under the int13h Coffee-Ware Licence                              *
+ * As long as you retain this notice you can do whatever you want with this   *
+ * stuff. If we meet some day, and you think this stuff is worth it, you can  *
+ * buy us a coffee.                                                           *
+ *                                                                            *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        *
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED  *
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR *
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR           *
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,      *
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,        *
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR         *
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF     *
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING       *
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         *
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               *
+ *                                                                            *
+ * Basically, don't be a dick....  - http://www.int13h.com                    *
+ *                                                                            *
+ *****************************************************************************/
+
+PFont fontA=createFont("Arial", 14); 
+
+int starcount=25;
+int asteroidcount=random(4,8);
+int asteroidsize=32;
+int playerlives=5;
+int pewlimit=5;
+int[][][] stars=new int[3][starcount][3]; // [layers][starcount][x,y,alpha]
+
+boolean highdetail=true;
+boolean showDebug=false;
+boolean running=true;
+int gamemode=0;
+int introscreen=0;
+
+String inputbuffer='';
+
+ArrayList highscores;
+
+ship player;
+ArrayList asteroids;
+
+//
+// Asteroid  ------------------------------------------------------------------
+//
+class asteroid {  
+	int id;
+	float x,y,a;
+	float xvel,yvel;
+	float speed=2;
+	int size;
+	int colour[];
+	boolean alive;
+
+	asteroid (int id, float x, float y, float a, int size){
+		this.id=id;
+		this.x=x+(cos(x)*(this.speed+2));
+		this.y=y+(sin(y)*(this.speed+2));
+		this.a=radians(a);
+		this.size=size;
+		this.alive=true;
+		colour={random(100,255),random(100,255),random(100,255)};
+		
+		xvel=cos(a)*speed;
+		yvel=sin(a)*speed;
+	}
+	
+	void checkCollisions (curid){
+		if(!running)
+			return;
+			
+		int ac=asteroids.size()-1;
+		for(int i=ac;i>=0;i--){ 
+			if(i==this.id)
+				continue;
+				
+			asteroid roid = (asteroid) asteroids.get(i);
+
+			float dx=roid.x-x;
+			float dy=roid.y-y;
+			float dist=sqrt(dx*dx+dy*dy);
+			
+			// Collided with another Asteroid
+			if(floor(dist-(this.size/2)) < ceil(roid.size/2)){
+				float ca=atan2(dy, dx);
+				float tx=x+cos(ca)*roid.size/2;  
+				float ty=y+sin(ca)*roid.size/2;  
+				float ax=((tx-roid.x)*0.025)+((roid.size-dist)/100);
+				float ay=((ty-roid.y)*0.025)+((roid.size-dist)/100);
+				xvel+=ax;  
+				yvel+=ay;
+				roid.xvel-=ax;
+				roid.yvel-=ay;
+				a=ca;
+				roid.a=-ca;
+			}
+		}
+	}
+  
+	void draw (){
+		if(highdetail){
+			fill(colour[0],colour[1],colour[2]);
+			stroke(colour[0]-80,colour[1]-80,colour[2]-80);
+		} else {
+			stroke(0,255,0);
+		}
+		translate(0,0);
+		ellipse(x,y,size,size);
+
+		if(showDebug){
+			textSize(10);
+			fill(0,0,0);
+			text(id,x-2,y+2);
+			fill(255,255,255);
+			text('x:'+x,x-20,y-40);
+			text('y:'+y,x-20,y-30);
+			text('a:'+a,x-20,y-20);
+			stroke(255,0,255);
+			line(x, y, x+((xvel*15)*speed), y+((yvel*15)*speed));
+		}
+	}
+	
+	void move (){
+		if(!running)
+			return;
+		
+		x+=xvel;
+		y+=yvel;
+
+		if(x < 0+(size/2) || x > width-(size/2))
+			xvel=-xvel;
+
+		if(y < 0+(size/2) || y > height-(size/2))
+			yvel=-yvel;
+	}
+} 
+
+//
+// Ship Class  -----------------------------------------------------------------
+//
+class ship {  
+	ArrayList pews;
+	int score=0;
+	float x, y;
+	float prevx, prevy;
+	float xvel, yvel;
+	float dxvel, dyvel;
+	float a, size;
+	boolean alive=true;
+	int lives=playerlives;
+	boolean thruston=false;
+	float thrust=0.05;
+	float beamlevel=100;
+	boolean beam=false;
+	
+	float shieldlevel=100;
+	boolean shield=false;
+
+	ship (){
+		x=(width/2);
+		y=(height/2);
+		xvel=yvel=dxvel=dyvel=0;
+		size=16;
+		pews=new ArrayList();
+	}
+	
+	void beamOn (){
+		if(shield || !running)
+			return;
+		beam=true;
+		if(highdetail)
+			$("#beamlevel > div").addClass('leveldrain');
+	}
+	
+	void beamOff(){beam=false;}
+  
+	void death (){
+		alive=false;
+		lives--;
+		gamemode=2;
+		$("#livesbox").html(player.lives);
+		if(lives<=0)
+			gamemode=4;
+		reset();
+	}
+  
+	void draw (){
+		// Draw pews
+		for(int i=pews.size()-1;i>=0;i--){ 
+			pew p = (pew) pews.get(i);
+			p.move();
+			if(!p.alive)
+				pews.remove(i);
+			else
+				p.draw();
+		}
+		
+		if(beam){
+			if(highdetail)
+				stroke(random(100,255),random(100,255),random(100,255));
+			else
+				stroke(0,255,0);
+
+      if (gamepad) {
+        bx = 10;
+        by = 10;
+      } else {
+        bx=mouseX;
+        by=mouseY;
+      }
+
+			// Generate Collision points
+			int[] cols=new int[2];
+			int sx=x;
+			int sy=y;
+			int bxvel=cos(a)*0.25;
+			int byvel=sin(a)*0.25;
+			int c=0;
+			do {
+				sx+=(bxvel*25);
+				sy+=(byvel*25);
+				cols[c]={sx,sy};
+				c++;
+				if(showDebug)
+					ellipse(sx, sy, 5, 5);
+				
+				float tx=mouseX-sx;
+				float ty=mouseY-sy;
+				float td=sqrt(tx*tx+ty*ty);
+			
+			} while (td > 8);
+
+			// Compare against asteroids
+			int colaid=-1;
+			int colnear=1000;
+			float colang;
+			int totcols=cols.length-1;
+			int ac=asteroids.size()-1;
+			for(int i=ac;i>=0;i--){ 
+				asteroid roid=(asteroid)asteroids.get(i);
+				
+				for(c=0;c<totcols;c++){
+					float dx=roid.x-cols[c][0];
+					float dy=roid.y-cols[c][1];
+					float ca=atan2(dy, dx);
+					float dist=sqrt(dx*dx+dy*dy);
+
+					if(floor(dist-(roid.size/2)) < 5 && c < colnear){
+						colnear=c;
+						colaid=i;
+						colang=ca;
+					}
+				}
+			}
+			
+			// Push closest asteroid!
+			if(colaid>-1){
+				bx=cols[colnear][0];
+				by=cols[colnear][1];
+				
+				asteroid roid=(asteroid)asteroids.get(colaid);
+				float tx=roid.x+cos(colang)*roid.size/2;  
+				float ty=roid.y+sin(colang)*roid.size/2;  
+				float ax=(tx-bx)*0.0025;
+				float ay=(ty-by)*0.0025;
+				roid.xvel+=ax;  
+				roid.yvel+=ay;
+				
+			}
+
+			line(x, y, bx, by);
+			beamlevel-=1.6;
+			if(beamlevel <= 0){
+				beamlevel=0;
+				beamOff();
+			}
+		}
+		
+		if(shield){
+			if(highdetail){
+				stroke(random(100,255),random(100,255),random(100,255));
+				fill(200,random(100,120));
+			} else {
+				stroke(0,255,0);
+				fill(0,255,0,random(100,120));
+			}
+			ellipse(x, y, shieldlevel, shieldlevel);
+			shieldlevel-=0.8;
+			if(shieldlevel <= 0){
+				shieldlevel=0;
+				shieldOff();
+			}
+		}
+		
+		if(running && beamlevel < 100)
+			beamlevel+=0.020;
+		if(beamlevel > 100){
+			beamlevel=100;
+			$("#beamlevel > div").removeClass('leveldrain');
+			$("#beamlevel").progressbar({value: player.beamlevel});
+		}
+
+		if(running && shieldlevel < 100)         
+			shieldlevel+=0.030;
+		if(shieldlevel > 100){
+			shieldlevel=100;
+			$("#shieldlevel > div").removeClass('leveldrain');
+			$("#shieldlevel").progressbar({value:player.shieldlevel});
+		}
+		
+		// Draw Ship
+		
+		translate(x,y);
+		if(showDebug){
+			fill(255,255,255);
+			textSize(10);
+			text('x:'+x,-20,-40);
+			text('y:'+y,-20,-30);
+			text('a:'+a,-20,-20);
+		}
+		pushMatrix();
+			rotate(a);
+			translate(-size/2,-size/2);
+			
+			if(highdetail){
+				fill(233,168,0);
+				stroke(133,68,0);
+			} else {
+				stroke(0,255,0);
+			}
+			triangle(0, 0, 16, 8, 0, 16);
+			if(thruston){
+				if(highdetail)
+					fill(random(150,255),random(100,120),random(0,100));
+				triangle(0, 4, -8, 8, 0, 12);
+			}
+		popMatrix();
+		
+		if(shieldlevel < 100)
+			$("#shieldlevel").progressbar({value:player.shieldlevel});
+
+		if(beamlevel < 100)
+			$("#beamlevel").progressbar({value: player.beamlevel});
+	}
+  
+	void move (){
+		if(!running)
+			return;
+			
+		float dx=prevx;
+		float dy=prevy;
+		if (gamepad) {
+		  if (pow(gamepad.axes.Left_Stick_X, 2) + pow(gamepad.axes.Left_Stick_Y, 2) > 0.10) {
+		    dx = gamepad.axes.Left_Stick_X;
+		    prevx = gamepad.axes.Left_Stick_X;
+		    dy = gamepad.axes.Left_Stick_Y;
+		    prevy = gamepad.axes.Left_Stick_Y;
+		  }
+		} else {
+		  dx = (mouseX-x);
+		  dy = (mouseY-y);
+		}
+		a=atan2(dy,dx);
+		
+		dxvel=dyvel=0;
+		if(thruston){
+			dxvel=cos(a)*thrust;
+			dyvel=sin(a)*thrust;		
+		}
+		
+		xvel+=dxvel;
+		yvel+=dyvel;
+		
+		x+=xvel;
+		y+=yvel;
+
+		if(shield && shieldlevel > size){
+			if(x < 0+(shieldlevel/2) || x > width-(shieldlevel/2)){
+				xvel=-xvel;
+				shieldlevel-=15;
+				shieldOff();
+			}
+			if(y < 0+(shieldlevel/2) || y > height-(shieldlevel/2)){
+				yvel=-yvel;
+				shieldlevel-=15;
+				shieldOff();
+			}
+		} else {
+			if((x < 0+(size/2) || x > width-(size/2))||
+				(y < 0+(size/2) || y > height-(size/2)))
+				death();
+		}
+	}
+
+	void pewFire (){
+		if(shield || !running || pews.size() > pewlimit-1) 
+			return;
+		pews.add(new pew(asteroids.size(),x,y,a));
+	}
+	
+	void reset (){
+		x=(width/2);
+		y=(height/2);
+		xvel=yvel=dxvel=dyvel=0;
+		thruston=shield=beam=false;
+		beamlevel=shieldlevel=100;
+		$("#shieldlevel").progressbar({value:player.shieldlevel});
+		$("#shieldlevel > div").removeClass('leveldrain');
+		$("#beamlevel").progressbar({value:player.beamlevel});
+		$("#beamlevel > div").removeClass('leveldrain');
+		int pc=pews.size()-1;
+		for(int i=pc;i>=0;i--){ 
+			pew p = (pew) pews.get(i);
+			pews.remove(i);
+		}
+	}
+	
+	void shieldOn (){
+		if(beam || !running)
+			return;
+		shield=true;
+		if(highdetail)
+			$("#shieldlevel > div").addClass('leveldrain');
+	}
+	
+	void shieldOff(){shield=false;}
+	
+	void thrustOn(){
+		if(!running)
+			return;
+		thruston=true;
+	}
+	void thrustOff(){thruston=false;}
+}
+
+//
+// Pew 'bullet' Class  --------------------------------------------------------
+//
+class pew {  
+	int id;
+	float x,y,a;
+	int size=5;
+	float speed=4;
+	boolean alive;
+
+	pew (int id, float x, float y, float a){
+		this.x=x+(cos(x)*(this.speed+2));
+		this.y=y+(sin(y)*(this.speed+2));
+		this.a=a;
+		this.alive=true;
+	}
+  
+	void move (){
+		if(!running)
+			return;
+		
+		x+=cos(a)*speed;
+		y+=sin(a)*speed;
+
+		if((x < 0 || x > width)||(y < 0 || y > height))
+			alive=false;
+
+		// Hit an Asteroid?	
+		int ac=asteroids.size()-1;
+		for(int i=ac;i>=0;i--){ 
+			asteroid roid = (asteroid) asteroids.get(i);
+
+			float dx=roid.x-x;
+			float dy=roid.y-y;
+			float dist=sqrt(dx*dx+dy*dy);
+
+			if(dist-(size/2) < roid.size/2){
+				player.score+=800;
+				asteroids.remove(i);
+				if(roid.size > 8){
+					float sx=roid.x;
+					float sy=roid.y;
+					float ss=roid.size/2;
+					
+					// Boundary check, make sure new roids spawn 
+					// in arena
+					if(sx-ss <= 0)
+						sx+=(roid.size+4);
+					if(sx+ss >= width)
+						sx-=(roid.size+4);						
+					if(sy-ss <= 0)
+						sy+=(roid.size+4);
+					if(sy+ss >= height)
+						sy-=(roid.size+4);
+						
+					int roidid=asteroids.size();
+					asteroids.add(new asteroid(roidid,
+						sx-ss,sy-ss,random(-180,180),roid.size/2));
+					asteroids.add(new asteroid(roidid+1,
+						sx+ss,sy+ss,random(-180,180),roid.size/2));
+				}
+				
+				if(asteroids.size()<1){
+					asteroidcount++;
+					$("#levelbox").html(asteroidcount);
+					player.score+=2000;
+				}
+				$("#scorebox").html(player.score);
+				
+				alive=false;
+				reindexAsteroids();
+				return;
+			}
+		}
+	}
+  
+	void draw (){
+		if(highdetail){
+			fill(233,168,0);
+			stroke(133,68,0);
+		} else {
+			stroke(0,255,0);
+		}
+		translate(0,0);
+		
+		if(showDebug){
+			textSize(10);
+			text('x:'+x,x-20,y-40);
+			text('y:'+y,x-20,y-30);
+			text('a:'+a,x-20,y-20);
+		}
+		
+		ellipse(x,y,size,size);
+	}
+}
+
+//
+// Main -----------------------------------------------------------------------
+//
+void setup (){  
+	size(640,400);	
+	frameRate(60);
+	cursor(CROSS);
+	player=new ship();
+	genStars();
+	textFont(fontA, 32);
+	genAsteroids();	
+	$("#livesbox").html("0");
+	$("#scorebox").html("0");
+	$("#levelbox").html("0");
+	getHighscores();
+}  
+
+void draw (){
+	background(0,0,0);
+
+	if(highdetail){
+		for(int j=0;j<3;j++){
+			for(int i=0;i<starcount;i++){
+				stroke(stars[j][i][2],stars[j][i][2],stars[j][i][2]);
+				point(stars[j][i][0]-(j*(player.x/20)),
+					stars[j][i][1]-(j*(player.x/20)));
+			}
+		}
+	} else {
+		for(int j=0;j<3;j++){
+			for(int i=0;i<starcount;i++){
+				stroke(0,stars[j][i][2],0);
+				point(stars[j][i][0]-(j*(player.x/20)),
+					stars[j][i][1]-(j*(player.x/20)));
+			}
+		}
+	}
+
+	switch (gamemode){
+		case 4: // Game Over
+			draw_gameover();
+			break;
+		case 3: // End of Level
+			draw_levelover();
+			break;
+		case 2: // Player Death
+			draw_world();
+			draw_playerdeath();
+			break;
+		case 1: // Game Running
+			draw_world();
+			if(asteroids.size()==0)
+				gamemode=3;
+			break;
+		case 0: // Intro Screen
+			draw_world();
+			draw_intro();
+			break;
+	}
+}
+
+//
+// Draw Game Mode --------------------------------------------------------------
+//
+
+void draw_gameover (){
+	if(highdetail)
+		fill(random(10,255),random(10,255),random(10,255));
+	else 
+		fill(0,random(10,255),0);
+	textSize(50);
+	text("GAME OVER", (width/2)-150, height/2-85);
+	textSize(30);
+	text("Score ", (width/2)-45, (height/2)-30);
+	text(player.score, (width/2)-45, (height/2));
+	text("Enter Your Name ", (width/2)-105, (height/2)+35);
+	text(inputbuffer, (width/2)-45, (height/2)+70);	
+	text("Press Enter To Submit", (width/2)-150, (height/2)+140);
+	text("Press ESC To Return", (width/2)-145, (height/2)+170);
+	genStars();
+}
+
+void draw_intro (){
+	if(highdetail)
+		fill(random(10,255),random(10,255),random(10,255));
+	else 
+		fill(0,random(10,255),0);
+	textSize(50);
+	text("PEW PEW!!", (width/2)-135, height/2-85);
+
+	if(highdetail)
+		fill(255,255,255);
+	else 
+		fill(0,random(10,255),0);
+
+	// Show High Scores
+	if(introscreen==1){
+		textSize(20);
+		text("High Scores:", (width/2)-60, (height/2)-40);
+	
+		int hsc=highscores.size()-1;		
+		if(hsc > 0){
+			for(int i=hsc;i>=0;i--){ 
+				var score = highscores.get(i).toString();
+				score=score.split(",");
+				text(score[0], (width/2)-130, (height/2)+(i*20)-10);
+				text(score[1], (width/2)+80, (height/2)+(i*20)-10);
+			}
+		} else {
+			text("Please Wait", (width/2)-55, (height/2)+10);
+			text("Fetching Scores", (width/2)-75, (height/2)+30);
+		}
+		
+		textSize(18);
+		text("Press H to See Controls", (width/2)-95, (height/2)+100);
+		
+	// Show Controls
+	}else{
+		textSize(20);
+		text("Controls:", (width/2)-40, (height/2)-40);
+		text("Use The Mouse To Aim", (width/2)-100, (height/2)-10);
+		text("Mouse 1 - Fire Pew / Mouse 2 - Fire Beam", 
+			(width/2)-185, (height/2)+10);
+		text("Mouse 3 or S - Activate Shield / W - Thrust", 
+			(width/2)-185, (height/2)+30);
+		
+		textSize(18);
+		text("Press H to See High Scores", (width/2)-105, (height/2)+100);
+		
+	}	
+	
+	text("Press R to toggle Retro Mode", (width/2)-115, (height/2)+120);
+	text("Press N To Start", (width/2)-65, (height/2)+140);
+	
+	textSize(10);
+	text("http://www.int13h.com - int13h Heavy Industries", 
+		(width/2)-110, (height/2)+185);
+	genStars();
+}
+
+void draw_levelover (){
+	if(highdetail)
+		fill(random(10,255),random(10,255),random(10,255));
+	else 
+		fill(0,random(10,255),0);
+	textSize(30);
+	text("LEVEL COMPLETE", (width/2)-130, height/2-30);
+	text("Press Space for round "+(asteroidcount)+"!", 
+		(width/2)-160, (height/2));
+	player.reset();
+	genStars();
+}
+
+void draw_playerdeath (){
+	if(highdetail)
+		fill(random(10,255),random(10,255),random(10,255));
+	else 
+		fill(0,random(10,255),0);
+	textSize(30);
+	text("You have been killed", (width/2)-135, height/2);
+	text("Press Space to respawn", (width/2)-160, (height/2)+30);
+}
+
+void draw_world (){
+	if(showDebug){
+		if((int)frameRate < 15)
+			fill(255,100,100);
+		else if((int)frameRate < 35)
+			fill(255,150,0);
+		else
+			fill(100,255,100);
+		textSize(10);
+		text(((int)frameRate)+'fps',10,10);
+	}
+
+	if(!highdetail)
+		noFill();
+	
+	// Draw Asteroids
+	for(int i=asteroids.size()-1;i>=0;i--){ 
+		asteroid a = (asteroid) asteroids.get(i);
+		a.move();
+		a.draw();
+
+		float dx=a.x-player.x;
+		float dy=a.y-player.y;
+		float dist=sqrt(dx*dx+dy*dy);
+			
+		// Collided with shield
+		if(gamemode==1 && player.alive){
+			if(player.shield && floor(dist-(a.size/2)) < ceil(player.shieldlevel/2)){
+
+				float ca=atan2(dy, dx);
+				float tx=a.x+cos(ca)*player.shieldlevel/2;  
+				float ty=a.y+sin(ca)*player.shieldlevel/2;  
+				float ax=((tx-a.x)*player.thrust);
+				float ay=((ty-a.y)*player.thrust);
+				a.xvel+=ax;  
+				a.yvel+=ay;
+				player.xvel-=ax;
+				player.yvel-=ay;
+							
+				player.shieldlevel-=25;
+		
+			// Hit Player
+			}else if(dist-(a.size/2) < player.size/2){
+				player.death();
+			}
+		}	
+		
+		a.checkCollisions(i);
+	}
+	
+	if(!running){
+		textSize(30);
+		if(highdetail)
+			fill(random(10,255),random(10,255),random(10,255));
+		else 
+			fill(0,random(10,255),0);
+		text("GAME PAUSED", (width/2)-100, height/2);
+	}
+	
+	if(gamemode==1 && player.alive){
+		player.move();
+		player.draw();
+	}
+}
+
+//
+// Generation ------------------------------------------------------------------
+//
+void genAsteroids (){
+	asteroids=new ArrayList();
+	for(int i=0;i<asteroidcount;i++){
+		int tx=random(0+20,width-20);
+		int ty=random(0+20,height-20);
+		float dx=tx-player.x;
+   		float dy=ty-player.y;
+		float dist=sqrt(dx*dx+dy*dy);
+		do{
+			tx=random(0+20,width-20);
+			ty=random(0+20,height-20);
+			dx=tx-player.x;
+   			dy=ty-player.y;
+			dist=sqrt(dx*dx+dy*dy);
+		} while(dist < 80)
+		asteroids.add(new asteroid(i,tx,ty,random(-180,180),asteroidsize));
+	}
+}
+
+void genStars (){
+	for(int i=0;i<starcount;i++){
+		stars[0][i]={random(0,width),random(0,height),random(0,100)};
+		stars[1][i]={random(0,width),random(0,height),random(100,200)};
+		stars[2][i]={random(0,width),random(0,height),random(200,255)};
+	}
+}
+
+void getHighscores (){
+	highscores=new ArrayList();
+	$.post('highscores.itf',function(data) {
+		$(data).each(function(key,value){
+			highscores.add(value);
+		});
+	},'json');
+}
+
+void reindexAsteroids (){
+	for(int i=asteroids.size()-1;i>=0;i--){ 
+		asteroid a = (asteroid) asteroids.get(i);
+		a.id=i;
+	}
+}
+
+void submitHighscore (){
+	highscores=new ArrayList();
+	$.post('/highscores.itf?action=submit',{name:inputbuffer,score:player.score},
+		function(data) {
+			$(data).each(function(key,value){
+				highscores.add(value);
+			});
+	},'json');
+	gamemode=0;
+	introscreen=1;
+	asteroidcount=random(4,8);
+	genAsteroids();
+	$("#livesbox").html("0");
+	$("#scorebox").html("0");
+	$("#levelbox").html("0");
+	running=true;
+	inputbuffer='';
+}
+
+// Some refactored functions
+
+void showRetroMode() {
+  if(highdetail){
+    highdetail=false;
+    $("#scene").addClass("retro");
+    $("p[class=levels]").each(function(){
+      $(this).removeClass("levels");$(this).addClass("retrotext");});
+    $("#shieldlevel > div").removeClass("ui-widget-header");
+    $("#shieldlevel > div").addClass("retrolevels");
+    $("#shieldlevel > div").removeClass("leveldrain");
+    $("#beamlevel > div").removeClass("ui-widget-header");
+    $("#beamlevel > div").addClass("retrolevels");
+    $("#beamlevel > div").removeClass("leveldrain");
+  }else{
+    highdetail=true;
+    $("#scene").removeClass("retro");
+    $("p[class=retrotext]").each(function(){
+      $(this).removeClass("retrotext");$(this).addClass("levels");});
+    $("#shieldlevel > div").removeClass("retrolevels");
+    $("#shieldlevel > div").addClass("ui-widget-header");
+    if(player.shieldlevel < 100)
+      $("#shieldlevel > div").addClass("leveldrain");
+    $("#beamlevel > div").removeClass("retrolevels");
+    $("#beamlevel > div").addClass("ui-widget-header");
+    if(player.beamlevel < 100)
+      $("#beamlevel > div").addClass("leveldrain");
+  }
+}
+
+void pauseGameOrContinue() {
+  if(gamemode==3){
+    genAsteroids();
+    gamemode=1;
+  } else if(gamemode==2){
+    player.alive=true;
+    gamemode=1;
+  } else if(running && gamemode==1) {
+    running=false;
+  } else if(!running && gamemode==1) {
+    running=true;
+  } else if(gamemode==0) {
+    player.score=0;
+    asteroidcount=1;
+    genAsteroids();
+    player.lives=playerlives;
+    player.reset();
+    player.alive=true;
+    genStars();
+    gamemode=1;
+    $("#scorebox").html(player.score);
+    $("#livesbox").html(player.lives);
+    $("#levelbox").html(asteroidcount);
+  }
+}
+
+void killGame() {
+  if(gamemode==0)
+    return;
+  gamemode=0;
+  asteroidcount=random(4,8);
+  genAsteroids();
+  $("#livesbox").html("0");
+  $("#scorebox").html("0");
+  $("#levelbox").html("0");
+  running=true;
+  inputbuffer='';
+}
+
+void showHighscores() {
+  if(introscreen==0){
+    getHighscores();
+    introscreen=1;
+  } else {
+    introscreen=0;
+  }
+}
+
+//
+// Input Handlers -------------------------------------------------------------
+//
+void keyPressed (){
+	if(gamemode==4 && key != 27){
+		if((key==8 || key==46)&& inputbuffer.length > 0) // Delete
+			inputbuffer=inputbuffer.substring(0,inputbuffer.length-1);
+		else if(key > 96 && key < 122 && inputbuffer.length < 4)
+			inputbuffer=inputbuffer+String.fromCharCode(key);
+		else if(key == 10 && inputbuffer.length > 0) // Enter/Return
+			submitHighscore();
+		return;		
+	}
+
+	switch(key){
+		case 27: // Esc
+			killGame();
+			break;
+		case 32: // Space
+			pauseGameOrContinue();
+			break;
+		case 100: // d
+			showDebug = !showDebug;
+			break;
+		case 104: // h
+			showHighscores();
+			break;
+		case 114: // r
+			showRetroMode();
+			break;
+		case 110: // n
+			pauseGameOrContinue();
+			break;
+		case 112: // p
+			pauseGameOrContinue();
+			break;
+		case 115: // S
+			player.shieldOn();
+			break;
+		case 119: // W
+			player.thrustOn();
+			break;
+	}
+}
+
+void keyReleased (){
+	switch(key){
+		case 115: // S
+			player.shieldOff();
+			break;
+		case 119: // W
+			player.thrustOff();
+			break;
+	}
+}
+
+void mousePressed (){
+	switch(mouseButton){
+		case 37: // Left Mouse
+			player.pewFire();
+			break;
+		case 3:  // Middle Mouse
+			player.shieldOn();
+			break;
+		case 39: // Right Mouse
+			player.beamOn();
+			break;
+	}
+}
+
+void mouseReleased (){
+	switch(mouseButton){
+		case 3:  // Middle Mouse
+			player.shieldOff();
+			break;
+		case 39: // Right Mouse
+			player.beamOff();
+			break;
+	}
+}
+
+//
+// Gamepad Input Handlers -------------------------------------------------------------
+//
+
+var gamepad;
+
+function gamepadConnected(e) {
+  try {
+    gamepad = new Input.Device(e.gamepad);
+    window.removeEventListener('MozGamepadConnected', gamepadConnected, false);
+  } catch (ex) {
+    println("Gamepad connection failure: " + ex);
+  }
+}
+
+function gamepadButtonDown(e) {
+  if (gamepad.buttons.Left_Trigger_1) {
+    //player.beamOn();
+  }
+  if (gamepad.buttons.Right_Trigger_1) {
+    player.pewFire();
+  }
+  if (gamepad.buttons.A_Button) {
+    player.thrustOn();
+  }
+  if (gamepad.buttons.B_Button) {
+    player.shieldOn();
+  }
+  if (gamepad.buttons.Start_Button) {
+    pauseGameOrContinue();
+  }
+  if (gamepad.buttons.Back_Button) {
+    killGame();
+  }
+  if (gamepad.buttons.Pad_Up) {
+    showRetroMode();
+  }
+  if (gamepad.buttons.Pad_Down) {
+    showDebug = !showDebug;
+  }
+  if (gamepad.buttons.Pad_Left) {
+    showHighscores();
+  }
+}
+
+function gamepadButtonUp(e) {
+  if (!gamepad.buttons.Left_Trigger_1) {
+    //player.beamOff();
+  }
+  if (!gamepad.buttons.A_Button) {
+    player.thrustOff();
+  }
+  if (!gamepad.buttons.B_Button) {
+    player.shieldOff();
+  }
+}
+
+function gamepadAxisMove(e) {
+  
+}
+
+function gamepadDisconnected(e) {
+  window.addEventListener('MozGamepadConnected', gamepadConnected, false);
+  gamepad = undefined;
+}
+
+window.addEventListener('MozGamepadConnected', gamepadConnected, false);
+window.addEventListener('MozGamepadButtonDown', gamepadButtonDown, false);
+window.addEventListener('MozGamepadButtonUp', gamepadButtonUp, false);
+window.addEventListener('MozGamepadAxisMoved', gamepadAxisMove, false);
+window.addEventListener('MozGamepadDisconnected', gamepadDisconnected, false);
+

@@ -1,0 +1,44 @@
+#pewpew div.canvasbox {
+	border: 4px solid #000;
+	border-top: 20px solid #000;
+	border-bottom: 20px solid #000;
+	width: 640px;
+}
+
+#pewpew div.leveldrain {
+  background-image: url('../images/jui/pbar-ani.gif');
+}
+
+#pewpew div.lbar {
+	width: 100px; 
+	height: 10px; 
+}
+
+#pewpew .ui-widget-header {
+	border: 1px solid #e78f08;
+	background: #f6a828 url('../images/jui/ui-bg_gloss-wave_35_f6a828_500x100.png') 50% 50% repeat-x;
+	color: #ffffff;
+	font-weight: bold;
+}
+
+#pewpew p.levels {
+	font-weight: bold;
+	font-size: 140%;
+	color: #e9a800;
+}
+
+#pewpew .retro {
+	border: 1px solid #00ff00;
+}
+
+#pewpew .retrolevels {
+	background-image: none;
+	background-color: #00ff00;
+	border: 1px solid #00ff00;
+}
+
+#pewpew .retrotext {
+	font-weight: bold;
+	font-size: 140%;
+	color: #00ff00;
+}
