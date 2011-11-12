@@ -1,0 +1,48 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+	<title>Processing.js multi-touch event handling</title> 
+	<script type="text/javascript" src="../../processing.js"></script>
+	<meta name="viewport" content="initial-scale=1,user-scalable=no" />
+	<style type="text/css"> 
+    html, body
+    {
+      margin: 0;
+      padding: 0;
+    }
+	</style> 
+	<script type="text/processing" data-processing-target="sketch">
+	  var touches = {};
+	
+    void setup() {
+      size(window.innerWidth, window.innerHeight);
+      background(255);
+      noStroke(0);
+    }
+    
+    // For touchscreens
+    void touchStart(t) {
+      for (int i = 0; i < t.touches.length; i++) {
+        var id = t.touches[i].identifier;
+        if (!touches[id]) {
+          touches[id] = color(random(255), random(255), random(255));
+        }
+        fill(touches[id]);
+        ellipse(t.touches[i].offsetX, t.touches[i].offsetY, 10, 10);
+      }
+    }
+    
+    void touchMove(t) {
+      for (int i = 0; i < t.touches.length; i++) {
+        var id = t.touches[i].identifier;
+        fill(touches[id]);
+        ellipse(t.touches[i].offsetX, t.touches[i].offsetY, 10, 10);
+      }
+    }
+	</script>
+</head> 
+<body> 
+	<canvas id="sketch"></canvas> 
+</body> 
+</html> 
+ 
